@@ -10,7 +10,7 @@ A script to crawl `http://downloads.khinsider.com/` for game soundtracks and dow
 
 ### Input URL via argv
 
-The downloader takes one argument from the commandline as the program is run, i.e. ``$ python downloader.py <url>`
+The downloader takes one argument from the commandline as the program is run, i.e. `$ python downloader.py url`
 
 ### `input.txt`
 
