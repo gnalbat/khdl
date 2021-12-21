@@ -1,5 +1,6 @@
 import config
 import os
+import urllib.parse
 import urllib.request
 import sys
 from bs4 import BeautifulSoup
@@ -109,7 +110,7 @@ def download_files(filetype, links, dir_name):
 				'mp3', 'flac')
 			if song_url not in downloaded_files:
 				downloaded_files[song_url] = True
-				file_name = basename(song_url)
+				file_name = urllib.parse.unquote(basename(song_url))
 				handle_download(song_url, dir_name, file_name)
 	if filetype == 'jpg':
 		images = links
