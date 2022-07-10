@@ -9,13 +9,8 @@ from tkinter import *
 from tkinter import filedialog
 from tqdm import tqdm
 
-
-
-
-
 config = configparser.ConfigParser()
 config.read('config.ini')
-
 
 """
 root = Tk()
@@ -115,20 +110,25 @@ def handle_download(file_url, dir_name, file_name):
 
 def download_files(filetype, links, dir_name):
 	downloaded_files = {}
-	if filetype in ('flac', 'mp3'):
+	if filetype in ('hq', 'mp3'):
 		print('[info] Downloading ' + filetype)
 		songMap = links
 		for song in songMap:
 			link_soup = BeautifulSoup(
 				urllib.request.urlopen(song), features="html.parser")
-			audio = link_soup.find('audio')
-			song_url = audio.get('src')
-			song_url = song_url if filetype == 'mp3' else song_url.replace(
-				'mp3', 'flac')
-			if song_url not in downloaded_files:
-				downloaded_files[song_url] = True
-				file_name = urllib.parse.unquote(basename(song_url))
-				handle_download(song_url, dir_name, file_name)
+			song_urls = link_soup.select('a > span.songDownloadLink')
+			for song_url in song_urls:
+				song_url = song_url.parent.get('href')
+				song_filetype = song_url.split('.')[-1]
+				print(filetype,song_filetype)
+				if filetype == 'mp3' and song_filetype != 'mp3':
+					continue
+				if filetype == 'hq' and song_filetype == 'mp3':
+					continue			
+				if song_url not in downloaded_files:
+					downloaded_files[song_url] = True
+					file_name = urllib.parse.unquote(basename(song_url))
+					handle_download(song_url, dir_name, file_name)
 	if filetype == 'jpg':
 		images = links
 		print('[info] Downloading ' + filetype)
@@ -165,16 +165,30 @@ def fetch_from_url(url):
 
 	soup = BeautifulSoup(urllib.request.urlopen(
 		url), features="html.parser", from_encoding="utf-8")
+		
+	mp3_only = False
+	for mass_download_link in soup.select('div.albumMassDownload > div > a'):
+		text = mass_download_link.text
+		if text=='click to download':
+			mp3_only = True
+			print('[info] only mp3 is available')
 
-	if config["general"].getboolean("jpg"):
+	if config["general"].getboolean("images"):
 		images = find_images(soup, title)
-		download_files('jpg', images, dir_name)
+		if images == False:
+			print('[info] no images available')
+		else:
+			download_files('jpg', images, dir_name)
 
 	songMap = find_songs(soup, title)
-	if config["general"].getboolean("flac"):
-		download_files('flac', songMap, dir_name)
-	if config["general"].getboolean("mp3"):
+	if config["general"].getboolean("hq") and mp3_only == False:
+		download_files('hq', songMap, dir_name)
+	else:
 		download_files('mp3', songMap, dir_name)
+
+
+def configure_settings():
+	pass
 
 
 try:
