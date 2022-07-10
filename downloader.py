@@ -1,26 +1,43 @@
-import config
+import configparser
 import os
 import urllib.parse
 import urllib.request
 import sys
 from bs4 import BeautifulSoup
 from os.path import basename
+from tkinter import *
+from tkinter import filedialog
 from tqdm import tqdm
+
+
+
+
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+
+"""
+root = Tk()
+root.withdraw()
+folder_selected = filedialog.askdirectory()
+
+print(folder_selected)"""
 
 BASE_URL = 'https://downloads.khinsider.com'
 INPUT_FILE_NAME = 'input.txt'
 
 
-class DownloadProgressBar (tqdm):
+class DownloadProgressBar(tqdm):
 	def update_to(self, b=1, bsize=1, tsize=None):
 		if tsize is not None:
 			self.total = tsize
 		self.update(b * bsize - self.n)
 
 
-def download_url(url, output_path):
+def download_url(url, output_path, file_name):
 	with DownloadProgressBar(unit='B', unit_scale=True,
-							 miniters=1, desc=url.split('/')[-1]) as t:
+							 miniters=1, desc=file_name) as t:
 		urllib.request.urlretrieve(
 			url, filename=output_path, reporthook=t.update_to)
 
@@ -44,7 +61,7 @@ def find_images(soup, title):
 		print('[error] url: ' + url)
 		return False
 
-	print('[info] ' + str(len(filtered_imgs)) + ' images acquired')
+	print('[info] ' + str(len(filtered_imgs)) + ' image/s acquired')
 	return filtered_imgs
 
 
@@ -90,7 +107,7 @@ def handle_download(file_url, dir_name, file_name):
 	if not file_already_downloaded:
 		print('[downloading] ' + file_name +
 			  ' [%.2f' % file_size + 'MB]')
-		download_url(file_url, file_on_disk_path)
+		download_url(file_url, file_on_disk_path, file_name)
 		print('[done] ' + file_name + '\n')
 	else:
 		print('[skipping] ' + file_name + ' already downloaded.')
@@ -130,7 +147,7 @@ def fetch_from_url(url):
 		return
 	print('[info] URL found: ' + url)
 
-	base_dir = 'downloads'
+	base_dir = config["general"]["downloadlocation"]
 	url_parts = url.split('/')
 
 	title = url_parts[len(url_parts) - 1]
@@ -149,24 +166,24 @@ def fetch_from_url(url):
 	soup = BeautifulSoup(urllib.request.urlopen(
 		url), features="html.parser", from_encoding="utf-8")
 
-	if config.jpg:
+	if config["general"].getboolean("jpg"):
 		images = find_images(soup, title)
 		download_files('jpg', images, dir_name)
 
 	songMap = find_songs(soup, title)
-	if config.flac:
+	if config["general"].getboolean("flac"):
 		download_files('flac', songMap, dir_name)
-	if config.mp3:
+	if config["general"].getboolean("mp3"):
 		download_files('mp3', songMap, dir_name)
 
 
 try:
 	if len(sys.argv) > 1:
 		url = sys.argv[1]
-		print('[info] Commandline argument found. Parsing for links...')
+		print('[info] Commandline argument found. Parsing links...')
 		fetch_from_url(url)
 	elif os.path.exists(INPUT_FILE_NAME):
-		print('[info] Input file found. Parsing for links...')
+		print('[info] Input file found. Parsing links...')
 		input_file = open(INPUT_FILE_NAME, 'r')
 		for line in input_file:
 			fetch_from_url(line)
