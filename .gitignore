@@ -6,4 +6,6 @@ config.ini
 downloader.build
 downloader.dist
 downloader.bin
+downloader.exe
+downloader.onefile-build
 python.xpm

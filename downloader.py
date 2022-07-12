@@ -4,20 +4,8 @@ import urllib.parse
 import urllib.request
 import sys
 from bs4 import BeautifulSoup
-from os.path import basename
-from tkinter import *
-from tkinter import filedialog
+from os.path import basename, exists
 from tqdm import tqdm
-
-config = configparser.ConfigParser()
-config.read('config.ini')
-
-"""
-root = Tk()
-root.withdraw()
-folder_selected = filedialog.askdirectory()
-
-print(folder_selected)"""
 
 BASE_URL = 'https://downloads.khinsider.com'
 INPUT_FILE_NAME = 'input.txt'
@@ -120,7 +108,6 @@ def download_files(filetype, links, dir_name):
 			for song_url in song_urls:
 				song_url = song_url.parent.get('href')
 				song_filetype = song_url.split('.')[-1]
-				print(filetype,song_filetype)
 				if filetype == 'mp3' and song_filetype != 'mp3':
 					continue
 				if filetype == 'hq' and song_filetype == 'mp3':
@@ -187,11 +174,19 @@ def fetch_from_url(url):
 		download_files('mp3', songMap, dir_name)
 
 
-def configure_settings():
-	pass
+def read_config():
+	config = configparser.ConfigParser()
+	if not exists('config.ini'):
+		config['general'] = {'hq': 'False',
+							'images': 'True',
+							'downloadlocation': './downloads'}
+	else:
+		config.read('config.ini')
+	return config
 
 
 try:
+	config = read_config()
 	if len(sys.argv) > 1:
 		url = sys.argv[1]
 		print('[info] Commandline argument found. Parsing links...')
