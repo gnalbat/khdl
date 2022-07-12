@@ -1,22 +1,41 @@
-# khinsider-mp3-downloader
+# khdl
 
-A script to crawl `http://downloads.khinsider.com/` for game soundtracks and download them. Downloads will be placed inside a `/downloads` directory inside the repo. Individual directories for each album will be generated automatically off the url name.
+Script for downloading game soundtracks from [KHInsider](http://downloads.khinsider.com/).
 
-## Install
-1. Create a virtual environment and activate it.
-2. Install requirements with `$ pip install -r requirements.txt`
+## Usage
+For downloading single albums:
+```bash
+./khdl <url> # If you downloaded an executable from releases
+```
+or
+```bash
+python -m venv venv
+source ./venv/bin/activate
+pip install -r requirements.txt
+python downloader.py <url>
+```
+If downloading multiple albums, create an `input.txt` inside the current working directory, placing the albums' urls separated by a newline, and run the program without arguments.
 
-## How To Use
+## Configuration
+Copy or rename `config.sample.ini` to `config.ini` in the current working directory and modify the parameters.
+```dosini
+[general]
+; images (boolean): Whether to download images [True/False]
+images = True
+; hq (boolean): download other formats if available, e.g. FLAC, OGG
+; will download mp3 if not available [True/False]
+hq = True
+; downloadlocation (string): relative or absolute path
+downloadlocation = ./downloads
+```
+If no `config.ini` is found, images and mp3 are downloaded by default.
 
-### Input URL via argv
+## Building
+Standalone executables are built using [Nuitka](https://github.com/Nuitka/Nuitka).
+```
+pip install nuitka ordered-set zstandard
+python -m nuitka --onefile downloader.py
+```
 
-The downloader takes one argument from the commandline as the program is run, i.e. `$ python downloader.py url`
-
-### `input.txt`
-
-Update the `input.txt` in the repo with a list of links, one link per line, and then run the script `$ python downloader.py`.
-The repo includes a properly formatted `input.txt` for reference.
-
-### Configuration
-
-Edit config.py to modify files to download. JPG, FLAC, and MP3 are available.
+## Notes
+Just [donate](https://downloads.khinsider.com/forums/index.php?account/upgrades) to KHInsider if you can.
